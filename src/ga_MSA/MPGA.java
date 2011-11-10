@@ -123,9 +123,17 @@ public class MPGA {
 					int dist = -1;
 					if (c1 == '-' && c2 == '-')
 						dist = 0;
-					else if (c1 == '-' || c2 == '-')
-						dist = -10;
-					else
+					else if (c1 == '-') {
+						if (c > 0 && indiv[s][c-1] == 0)
+							dist = -1;
+						else
+							dist = -10;
+					} else if (c2 == '-') {
+						if (c > 0 && indiv[t][c-1] == 0)
+							dist = -1;
+						else
+							dist = -10;
+					} else
 						try {
 							dist = Blosum.getDistance(c1, c2);
 						} catch (Exception e) {
