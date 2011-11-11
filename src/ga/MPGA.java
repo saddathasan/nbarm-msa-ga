@@ -318,8 +318,8 @@ public class MPGA {
 	}
 
 	public void crossover(){
-		Integer [] child1 = new Integer[l];
-		Integer [] child2 = new Integer[l];
+		Integer [] child1;
+		Integer [] child2;
 		for (int k = 0; k < p; k++) {
 			int size = GA.get(k).size();
 			for (int i = 0; i < size; i++) {
@@ -360,6 +360,8 @@ public class MPGA {
 						mate = mate1;
 					//else
 						//mate = mate2;
+					child1 = new Integer[l];
+					child2 = new Integer[l];
 					int crossPoint = (int)Math.floor((Math.random()*(l-1)) + 1);
 					
 					// Perform crossover to generate offsprings
