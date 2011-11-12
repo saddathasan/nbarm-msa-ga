@@ -1,4 +1,5 @@
 package ga_MSA;
+import java.io.*;
 
 /**
  * 
@@ -47,6 +48,52 @@ public class MSA {
 		seq[4] = "MALVEDNNAVAVSFSEEQEALVLKSWAILKKDSANIALRFFLKIFEVAPSASQMFSFLR" +
 				 "NSDVPLEKNPKLKTHAMSVFVMTCEAAAQLRKAGKVTVRDTTLKRLGATHLKYGVGDA" +
 				 "HFEVVKFALLDTIKEEVPADMWSPAMKSAWSEAYDHLVAAIKQEMKPAE";
+		/*seq[0] = "MQEQATSSLAASSLPSSSERSSSSAPHLEIKEGIESDEEIRRVPEFGGEAVGKETSGRESGSATGQERTQATVG" +
+				"ESQRKRGRTPAEKENKRLKRLLRNRVSAQQARERKKAYLSELENRVKDLENKNSE" +
+				"LEERLSTLQNENQMLRHILKNTTGNKRGGGGGSNADASL";
+		seq[1] = "MQEQATSSIAASSLPSSSERSSSSALHHELKEGMESDDEIRRVPEMGGEATGTTSA" +
+				"SGRDGVSAAGQAQPSAGTQRKRGRSPADKENKRLKRLLRNRVSAQQARERKKAYLIDLEARVK" +
+				"ELETKNAELEERLSTLQNENQMLRHILKNTTAGAQEGRK";
+		seq[2] = "MAAQEQEQEKQQVKTSTTSSLPSSSERSSSSAPNNLKEGGGVESDEEIRRVPEMGGGGGSASSGAG" +
+				"ADERQGKEDGKQQGGGGGGAAAAGGGQEQAPPARKRGRSAGDKEQNRLKRLLRNRVSAQQARERKKAYMTELE" +
+				"AKAKDLELRNAELEQRVSTLQNENNTLRQILKNTTAHAGKRGGGGGGKGGDGGGGGKKHHFTKS";
+		seq[3] = "MTIKRKDDGQVVKQSVKAVGGGLLERVDSDDEEIVGRVPEFGLALPGTSTSGRGSVRVAGDAAATAAG" +
+				"TSSSSPAAQAGVAGSSSSGRRRGRSPADKEHRRLKRLLRNRVSAQQARERKKAYMSELEARVKDLERSNSELEE" +
+				"RLSTLQNENQMLRQVLKNTTANRRGPDSSAGGDS";
+		seq[4] = "MQEQATSSRPSSSERSSSSGGHHMEIKEGKEAPLRSLLLPFLDFHFTVPLSGMESDEEIGRVPELGLEPGGASTSG" +
+				"RAAGGGGGGAERAQSSTAQASARRRGRSPADKEHKRLKRLLRNRVSAQQARERKKAYLNDLEVKVKDLEKKNSELEERFSTL" +
+				"QNENQMLRQILKNTTVSRRGPGSTASGEGQ";*/
+		/*try {
+			  FileInputStream fstream = new FileInputStream("F:/workspace/MPGA_new/src/ga_MSA/BOX012.txt");
+		
+			  // Get the object of DataInputStream
+			  //DataInputStream in = new DataInputStream(fstream);
+			  BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+			  String strLine;
+			  //Read File Line By Line
+			  int line = 0;
+			  strLine = br.readLine();
+			  while (strLine != null)   {
+			  // Print the content on the console
+				   System.out.println (strLine);
+				   if (strLine.charAt(0) == '>') {
+					   strLine = br.readLine();
+					   while ( strLine != null && strLine.charAt(0) != '>' ) {
+						   if (strLine.length() > 0)
+							   seq[line] += strLine.replaceAll("u", "");
+						   System.out.println (strLine);
+						   strLine = br.readLine();
+					   }
+					   line++;
+				   }
+			  }
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
 		
 		size = new int[maxW];
 		for (int i = 0; i < maxW; i++) {
@@ -54,7 +101,7 @@ public class MSA {
 			if (size[i] > maxL)
 				maxL = size[i];
 		}
-		//adding 10 gaps
+		//adding 30 gaps
 		maxL += 10;
 	}
 	

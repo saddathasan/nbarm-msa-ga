@@ -79,7 +79,7 @@ final public class Blosum{
 	    	case 'W': return 17;
 	    	case 'Y': return 18;
 	    	case 'V': return 19;
-	    	default: throw new Exception("Invalid amino acid character");
+	    	default: throw new Exception("Invalid amino acid character: " + a);
     	}
     }
     

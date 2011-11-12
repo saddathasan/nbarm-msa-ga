@@ -6,6 +6,7 @@ public class MSA_Test {
 		MSA msa = new MSA();
 		
 		System.out.println("Run Started");
+		System.out.println("maxL = " + msa.maxL);
 		MPGA mpga = new MPGA(msa.maxL,msa.maxW, msa);
 		System.out.println("Best Individuals:");
 		for (int i = 0; i < mpga.elites.length; i++)
@@ -14,7 +15,7 @@ public class MSA_Test {
 		printElite(mpga, msa);
 		System.out.println("Running Adaptive MPGA....");
 		double lastBest = mpga.eliteF;
-		for (int k = 1; k < 1001; k++) {
+		for (int k = 1; k < 501; k++) {
 			mpga.singleGARun();
 			//if (k%10 != 0 && k > 11) continue;
 			/*System.out.println("Best Individuals in run " + k);
@@ -25,7 +26,7 @@ public class MSA_Test {
 			}*/
 			//System.out.println("Best Individual:");
 			//printElite(mpga, msa);
-			if (mpga.eliteF > lastBest)
+			//if (mpga.eliteF > lastBest)
 				System.out.println("Best Score so far in run " + k + " = " + mpga.eliteF);
 			lastBest = mpga.eliteF;
 		}
