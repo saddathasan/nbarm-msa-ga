@@ -4,8 +4,8 @@ import java.util.Vector;
 
 public class MPGA {
 	
-	private double mutation = 0.00025;
-	private double cross = 0.10;
+	private double mutation = 0.0005;
+	private double cross = 0.1;
 	private double[] migrationRate;
 	private int migrationInterval = 1;
 	private double[] new_FG; //new fitness gain
@@ -120,7 +120,7 @@ public class MPGA {
 						c2 = msa.getChar(t, size[t]);
 					else
 						c2 = '-';
-					int dist = -1;
+					int dist = 0;
 					if (c1 == '-' && c2 == '-')
 						dist = 0;
 					else if (c1 == '-') {
@@ -133,8 +133,12 @@ public class MPGA {
 							dist = -1;
 						else
 							dist = -10;
-					} else
+					} else if (c1 != '-' && c2 != '-')
 						try {
+							/*if (c1 == 'u' || c2 == 'u') {
+								System.out.println(c1 + " " + c2);
+								System.out.println(s + " " + t + " " + c);
+							}*/
 							dist = Blosum.getDistance(c1, c2);
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -303,46 +307,192 @@ public class MPGA {
 		for (int k = 0; k < p; k++) {
 			for (int i = 0; i < GA.get(k).size(); i++) {
 				Integer[][] indiv = GA.get(k).get(i);
-				for (int n = 0; n < w; n++) {
-					for (int j = 0; j < l; j++) {
-						// Flip the bit if get mutated (using bitwise XOR with 1)
-						
-						if(Math.random() < mutation) {
-							//populationGA[i][j] = populationGA[i][j]^1;
-							//indiv[n][j] = indiv[n][j]^1;
-							int r = (int)Math.floor(Math.random()*l);
-							int t = indiv[n][r];
-							indiv[n][r] = indiv[n][j];
-							indiv[n][j] = t;
+				for (int m = 0; m < 1; m++) {
+					Integer[][] indivTemp = new Integer[w][l];
+					for (int a = 0; a < w; a++) {
+						indivTemp[a] = copy(indiv[a]);
+					}
+					for (int n = 0; n < w; n++) {
+						for (int j = 0; j < l; j++) {
+							//if (indiv[n][j] == 1)
+								//continue;
+							if(Math.random() < mutation) {
+								//populationGA[i][j] = populationGA[i][j]^1;
+								int r = (int)Math.floor(Math.random()*l);
+								int t;
+								// Swapping gap
+								indivTemp[n][j] = indivTemp[n][j]^1;
+								/*if (Math.random() >= 0.5 ) {
+									t = indivTemp[n][r];
+									indivTemp[n][r] = indivTemp[n][j];
+									indivTemp[n][j] = t;
+									continue;
+								}
+								//else, shifting sequence
+								int stop = 0;
+								if (r > j) {
+									stop = r - j - 1; 
+									t = indivTemp[n][j];
+									for (int e = 0; e < stop; e++) {
+										indivTemp[n][j+e] = indivTemp[n][j+e+1];
+									}
+									indivTemp[n][r-1] = t;
+								} else if (j > r) {
+									stop = j - r - 1; 
+									t = indivTemp[n][j];
+									for (int e = stop + 1; e > 0; e--) {
+										indivTemp[n][r+e] = indivTemp[n][r+e-1];
+									}
+									indivTemp[n][r] = t;
+								}*/
+							}//mut
+						}//l
+					}//w
+					int[] count = new int[w];
+					for (int n = 0; n < w; n++) {
+						count[n] = 0;
+						for (int j = 0; j < l; j++) {
+							count[n] += indivTemp[n][j];
 						}
 					}
-				}
-				GA.get(k).set(i, indiv);
+					//check if fix is needed
+					for (int n = 0; n < w; n++) {
+						//System.out.println("count = " + count[n] + ", length = " +  msa.length(n));
+						if (count[n] < msa.length(n)) {
+							//need to add ones
+							while (count[n] < msa.length(n)){
+								for (int j = 0; j < l; j++) {
+									if (Math.random() < 1.0 / l) {
+										if (indivTemp[n][j] == 0) {
+											indivTemp[n][j] = 1;
+											count[n]++;
+											if (count[n] >= msa.length(n))
+												break;
+										}
+									}
+								}
+							}
+						} else if (count[n] > msa.length(n)) {
+							//need to remove ones
+							while (count[n] > msa.length(n)){
+								for (int j = 0; j < l; j++) {
+									if (Math.random() < 1.0 / l) {
+										if (indivTemp[n][j] == 1) {
+											indivTemp[n][j] = 0;
+											count[n]--;
+											if (count[n] <= msa.length(n))
+												break;
+										}
+									}
+								}
+							}
+						} 
+						//System.out.println("count = " + count[n] + ", length = " +  msa.length(n));
+					}//w
+					//if (getFitness(indivTemp) > fitness.get(k).get(i)) {
+						indiv = indivTemp;
+						GA.get(k).set(i, indiv);
+					//}
+				}//m times
 					
 			}
 			for (int i = 0; i < GA_New.get(k).size(); i++) {
 				Integer[][] indiv = GA_New.get(k).get(i);
-				for (int n = 0; n < w; n++) {
-					for (int j = 0; j < l; j++) {
-						// Flip the bit if get mutated (using bitwise XOR with 1)
-						if(Math.random() < mutation) {
-							//populationGA[i][j] = populationGA[i][j]^1;
-							//indiv[j] = indiv[j]^1;
-							int r = (int)Math.floor(Math.random()*l);
-							int t = indiv[n][r];
-							indiv[n][r] = indiv[n][j];
-							indiv[n][j] = t;
+				for (int m = 0; m < 1; m++) {
+					Integer[][] indivTemp = new Integer[w][l];
+					for (int a = 0; a < w; a++) {
+						indivTemp[a] = copy(indiv[a]);
+					}
+					for (int n = 0; n < w; n++) {
+						for (int j = 0; j < l; j++) {
+							//if (indiv[n][j] == 1)
+								//continue;
+							if(Math.random() < mutation) {
+								//populationGA[i][j] = populationGA[i][j]^1;
+								//indiv[j] = indiv[j]^1;
+								int r = (int)Math.floor(Math.random()*l);
+								int t;
+								// Swapping gap
+								indivTemp[n][j] = indivTemp[n][j]^1;
+								/*if (Math.random() >= 0.5 ) {
+										t = indivTemp[n][r];
+										indivTemp[n][r] = indivTemp[n][j];
+										indivTemp[n][j] = t;
+									continue;
+								}
+								//else, shifting sequence
+								int stop = 0;
+								if (r > j) {
+									stop = r - j - 1; 
+									t = indivTemp[n][j];
+									for (int e = 0; e < stop; e++) {
+										indivTemp[n][j+e] = indivTemp[n][j+e+1];
+									}
+									indivTemp[n][r-1] = t;
+								} else if (j > r) {
+									stop = j - r - 1; 
+									t = indivTemp[n][j];
+									for (int e = stop + 1; e > 0; e--) {
+										indivTemp[n][r+e] = indivTemp[n][r+e-1];
+									}
+									indivTemp[n][r] = t;
+								}*/
+							}
 						}
 					}
-				}
-				GA_New.get(k).set(i, indiv);
+					int[] count = new int[w];
+					for (int n = 0; n < w; n++) {
+						count[n] = 0;
+						for (int j = 0; j < l; j++) {
+							if (indivTemp[n][j] == 1)
+								count[n]++;
+						}
+					}
+					//check if fix is needed
+					for (int n = 0; n < w; n++) {
+						//System.out.println("count c = " + count[n] + ", length c = " +  msa.length(n));
+						if (count[n] < msa.length(n)) {
+							//need to add ones
+							while (count[n] < msa.length(n)){
+								for (int j = 0; j < l; j++) {
+									if (Math.random() < 1.0 / l) {
+										if (indivTemp[n][j] == 0) {
+											indivTemp[n][j] = 1;
+											count[n]++;
+											if (count[n] >= msa.length(n))
+												break;
+										}
+									}
+								}
+							}
+						} else if (count[n] > msa.length(n)) {
+							//need to remove ones
+							while (count[n] > msa.length(n)){
+								for (int j = 0; j < l; j++) {
+									if (Math.random() < 1.0 / l) {
+										if (indivTemp[n][j] == 1) {
+											indivTemp[n][j] = 0;
+											count[n]--;
+											if (count[n] <= msa.length(n))
+												break;
+										}
+									}
+								}
+							}
+						} 
+					}
+					//if (getFitness(indivTemp) > fitness_New.get(k).get(i)) {
+						indiv = indivTemp;
+						GA_New.get(k).set(i, indiv);
+					//}
+				}//m times
 			}
-		}
+		}//pop
 	}
 
 	public void crossover(){
-		Integer [][] child1 = new Integer[w][l];
-		Integer [][] child2 = new Integer[w][l];
+		Integer [][] child1;
+		Integer [][] child2;
 		for (int k = 0; k < p; k++) {
 			int size = GA.get(k).size();
 			for (int i = 0; i < size; i++) {
@@ -383,17 +533,94 @@ public class MPGA {
 						mate = mate1;
 					//else
 						//mate = mate2;
-					int crossPoint = (int)Math.floor((Math.random()*(w-1)) + 1);
+
+					child1 = new Integer[w][l];
+					child2 = new Integer[w][l];
+					if (Math.random() >= 0.5 ) {
+						// Perform random row crossover to generate offsprings
+						int crossPoint = (int)Math.floor((Math.random()*(w-1)) + 1);
+						for (int j = 0; j < crossPoint; j++) {
+							child1[j] = copy(indiv[j]);
+							child2[j] = copy(mate[j]);
+						}
+						for (int j = crossPoint; j < w; j++) {
+							child1[j] = copy(mate[j]);
+							child2[j] = copy(indiv[j]);
+						}
+					} else {
+						//else do random column crossover
+						int[] crossPoints = new int[w];
+						int[] gaps = new int[w];
+						int[] gapsSoFar = new int[w];
+						int[] aminoSoFar = new int[w];
+						int[] gapsSoFarMate = new int[w];
+						int[] aminoSoFarMate = new int[w];
+						for (int j = 0; j < w; j++) {
+							crossPoints[j] = (int)Math.floor((Math.random()*(l-1)) + 1);
+							gaps[j] = l - msa.length(j);
+							gapsSoFar[j] = 0;
+							aminoSoFar[j] = 0;
+							for (int c = 0; c <= crossPoints[j]; c++) {
+								if (indiv[j][c] == 1)
+									aminoSoFar[j]++;
+								else
+									gapsSoFar[j]++;
+								child1[j][c] = indiv[j][c];
+							}
+							gapsSoFarMate[j] = 0;
+							aminoSoFarMate[j] = 0;
+							int cross = 0;
+							while (aminoSoFarMate[j] < aminoSoFar[j]) {
+								if (mate[j][cross] == 1)
+									aminoSoFarMate[j]++;
+								else
+									gapsSoFarMate[j]++;
+								child2[j][cross] = mate[j][cross];
+								cross++;
+							}
+							//System.out.println("cross+1" +cross);
+							//start coping 2nd part
+							int gapsExtra = Math.abs(gapsSoFarMate[j] - gapsSoFar[j]);
+							int gapsNeeded = gapsExtra;
+							if (gapsSoFar[j] > gapsSoFarMate[j]) {
+								for (int c = cross, d = crossPoints[j]+1; c < l; c++) {
+									if (gapsExtra > 0 && mate[j][c] == 0) {
+										gapsExtra--;
+										continue;
+									}
+									child1[j][d++] = mate[j][c];
+								}
+								for (int e = 0; e < gapsNeeded; e++) {
+									child2[j][cross++] = 0;
+								}
+								for (int c = cross, d = crossPoints[j]+1; c < l; c++) {
+									child2[j][c] = indiv[j][d++];
+								}
+							} else if (gapsSoFarMate[j] > gapsSoFar[j]) {
+								for (int c = cross, d = crossPoints[j]+1; d < l; d++) {
+									if (gapsExtra > 0 && indiv[j][d] == 0) {
+										gapsExtra--;
+										continue;
+									}
+									child2[j][c++] = indiv[j][d];
+								}
+								for (int e = 0 ; e < gapsNeeded; e++) {
+									child1[j][++crossPoints[j]] = 0;
+								}
+								for (int c = cross, d = crossPoints[j]+1; c < l; c++) {
+									child1[j][d++] = mate[j][c];
+								}
+							} else {
+								for (int c = cross, d = crossPoints[j]+1; c < l; c++) {
+									child1[j][d++] = mate[j][c];
+								}
+								for (int c = cross, d = crossPoints[j]+1; c < l; c++) {
+									child2[j][c] = indiv[j][d++];
+								}							
+							}
+						}
+					}
 					
-					// Perform crossover to generate offsprings
-					for (int j = 0; j < crossPoint; j++) {
-						child1[j] = copy(indiv[j]);
-						child2[j] = copy(mate[j]);
-					}
-					for (int j = crossPoint; j < w; j++) {
-						child1[j] = copy(mate[j]);
-						child2[j] = copy(indiv[j]);
-					}
 					double val1 = getFitness(child1);
 					double val2 = getFitness(child2);
 					GA_New.get(k).add(child1);
