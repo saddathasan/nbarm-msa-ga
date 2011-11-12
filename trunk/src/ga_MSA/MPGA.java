@@ -348,47 +348,7 @@ public class MPGA {
 							}//mut
 						}//l
 					}//w
-					int[] count = new int[w];
-					for (int n = 0; n < w; n++) {
-						count[n] = 0;
-						for (int j = 0; j < l; j++) {
-							count[n] += indivTemp[n][j];
-						}
-					}
-					//check if fix is needed
-					for (int n = 0; n < w; n++) {
-						//System.out.println("count = " + count[n] + ", length = " +  msa.length(n));
-						if (count[n] < msa.length(n)) {
-							//need to add ones
-							while (count[n] < msa.length(n)){
-								for (int j = 0; j < l; j++) {
-									if (Math.random() < 1.0 / l) {
-										if (indivTemp[n][j] == 0) {
-											indivTemp[n][j] = 1;
-											count[n]++;
-											if (count[n] >= msa.length(n))
-												break;
-										}
-									}
-								}
-							}
-						} else if (count[n] > msa.length(n)) {
-							//need to remove ones
-							while (count[n] > msa.length(n)){
-								for (int j = 0; j < l; j++) {
-									if (Math.random() < 1.0 / l) {
-										if (indivTemp[n][j] == 1) {
-											indivTemp[n][j] = 0;
-											count[n]--;
-											if (count[n] <= msa.length(n))
-												break;
-										}
-									}
-								}
-							}
-						} 
-						//System.out.println("count = " + count[n] + ", length = " +  msa.length(n));
-					}//w
+					repair(indivTemp);
 					//if (getFitness(indivTemp) > fitness.get(k).get(i)) {
 						indiv = indivTemp;
 						GA.get(k).set(i, indiv);
@@ -440,47 +400,7 @@ public class MPGA {
 							}
 						}
 					}
-					int[] count = new int[w];
-					for (int n = 0; n < w; n++) {
-						count[n] = 0;
-						for (int j = 0; j < l; j++) {
-							if (indivTemp[n][j] == 1)
-								count[n]++;
-						}
-					}
-					//check if fix is needed
-					for (int n = 0; n < w; n++) {
-						//System.out.println("count c = " + count[n] + ", length c = " +  msa.length(n));
-						if (count[n] < msa.length(n)) {
-							//need to add ones
-							while (count[n] < msa.length(n)){
-								for (int j = 0; j < l; j++) {
-									if (Math.random() < 1.0 / l) {
-										if (indivTemp[n][j] == 0) {
-											indivTemp[n][j] = 1;
-											count[n]++;
-											if (count[n] >= msa.length(n))
-												break;
-										}
-									}
-								}
-							}
-						} else if (count[n] > msa.length(n)) {
-							//need to remove ones
-							while (count[n] > msa.length(n)){
-								for (int j = 0; j < l; j++) {
-									if (Math.random() < 1.0 / l) {
-										if (indivTemp[n][j] == 1) {
-											indivTemp[n][j] = 0;
-											count[n]--;
-											if (count[n] <= msa.length(n))
-												break;
-										}
-									}
-								}
-							}
-						} 
-					}
+					repair(indivTemp);
 					//if (getFitness(indivTemp) > fitness_New.get(k).get(i)) {
 						indiv = indivTemp;
 						GA_New.get(k).set(i, indiv);
@@ -536,7 +456,22 @@ public class MPGA {
 
 					child1 = new Integer[w][l];
 					child2 = new Integer[w][l];
-					if (Math.random() >= 0.5 ) {
+						// Perform random row crossover to generate offsprings
+					int crossPoint = (int)Math.floor(Math.random()*(l));
+					for (int n = 0; n < w; n++) {
+						for (int j = 0; j < crossPoint; j++) {
+							child1[n][j] = indiv[n][j];
+							child2[n][j] = mate[n][j];
+						}
+						for (int j = crossPoint; j < l; j++) {
+							child1[n][j] = mate[n][j];
+							child2[n][j] = indiv[n][j];
+						}
+					}
+					repair(child1);
+					repair(child2);
+					
+					/*if (Math.random() >= 0.5 ) {
 						// Perform random row crossover to generate offsprings
 						int crossPoint = (int)Math.floor(Math.random()*(w));
 						for (int j = 0; j <= crossPoint; j++) {
@@ -619,7 +554,7 @@ public class MPGA {
 								}							
 							}
 						}
-					}
+					}*/
 					
 					double val1 = getFitness(child1);
 					double val2 = getFitness(child2);
@@ -837,5 +772,50 @@ public class MPGA {
 		}
 		return toReturn;
 	}
+	
+	private void repair(Integer[][] arg1) {
+
+		int[] count = new int[w];
+		for (int n = 0; n < w; n++) {
+			count[n] = 0;
+			for (int j = 0; j < l; j++) {
+				if (arg1[n][j] == 1)
+					count[n]++;
+			}
+		}
+		//check if fix is needed
+		for (int n = 0; n < w; n++) {
+			//System.out.println("count c = " + count[n] + ", length c = " +  msa.length(n));
+			if (count[n] < msa.length(n)) {
+				//need to add ones
+				while (count[n] < msa.length(n)){
+					for (int j = 0; j < l; j++) {
+						if (Math.random() < 1.0 / l) {
+							if (arg1[n][j] == 0) {
+								arg1[n][j] = 1;
+								count[n]++;
+								if (count[n] >= msa.length(n))
+									break;
+							}
+						}
+					}
+				}
+			} else if (count[n] > msa.length(n)) {
+				//need to remove ones
+				while (count[n] > msa.length(n)){
+					for (int j = 0; j < l; j++) {
+						if (Math.random() < 1.0 / l) {
+							if (arg1[n][j] == 1) {
+								arg1[n][j] = 0;
+								count[n]--;
+								if (count[n] <= msa.length(n))
+									break;
+							}
+						}
+					}
+				}
+			} 
+		}
+	}//repair
 
 }
