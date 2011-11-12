@@ -538,12 +538,12 @@ public class MPGA {
 					child2 = new Integer[w][l];
 					if (Math.random() >= 0.5 ) {
 						// Perform random row crossover to generate offsprings
-						int crossPoint = (int)Math.floor((Math.random()*(w-1)) + 1);
-						for (int j = 0; j < crossPoint; j++) {
+						int crossPoint = (int)Math.floor(Math.random()*(w));
+						for (int j = 0; j <= crossPoint; j++) {
 							child1[j] = copy(indiv[j]);
 							child2[j] = copy(mate[j]);
 						}
-						for (int j = crossPoint; j < w; j++) {
+						for (int j = crossPoint + 1; j < w; j++) {
 							child1[j] = copy(mate[j]);
 							child2[j] = copy(indiv[j]);
 						}
