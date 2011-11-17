@@ -8,8 +8,8 @@ import java.util.Date;
 public class Main {
 
 	
-	public static int  maxIter = 2000;
-	public static int runNo = 100;
+	public static int  maxIter = 500;
+	public static int runNo = 5;
 	//public static double [] average = new double [maxIter];
 	public static double [] endRun = new double [runNo];
 	public static double [] endRunT = new double [runNo];
@@ -62,7 +62,7 @@ public class Main {
 				for (int i = 0; i < runNo; i++) {
 					System.out.println("Run " + String.valueOf(i + 1));
 					//GA ga = new GA(k);
-					MPGA mpga = new MPGA(8,3, msa);
+					MPGA mpga = new MPGA(msa.maxL,msa.maxW, msa);
 					Date startT = new Date();
 					//ga.runGA();
 					mpga.runGA();

@@ -132,11 +132,12 @@ public class MPGA {
 		mutation();
 		setElite();
 		replacement();
-		if (generation % migrationInterval == 0) 
+		if (generation % migrationInterval == 0) {
 			//migration_ring_fixed();
 			//migration_ring_adaptive();
-			//migration_mix_fixed();
-			migration_mix_adaptive();
+			migration_mix_fixed();
+			//migration_mix_adaptive();
+		}
 	}
 	public void runGA(){
 		for (int i = 0; i < Main.maxIter; i++) {

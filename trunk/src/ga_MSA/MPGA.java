@@ -3,11 +3,41 @@ package ga_MSA;
 import java.util.Vector;
 
 public class MPGA {
-	
+	//##############################################
+	// RUNNING TEST ON GAP SCORES for 1000 GEN's
+	// using 0.0005 mut and 0.25 cross
+	// Open: Extend: Columns matching: Score
+	//  -1:  0:   5 : +909
+	//	-1: -0.01:6 : +864 
+	//	-1: -0.05:3 : +781
+	//	-1: -0.1: 7 : +747
+	//  -1: -0.2: 6 : +850
+	//	-1:	-0.3: 3 : +620
+	//  -2:  0:   5 : +659
+	//	-2: -0.01:6 : +580
+	//  -2: -0.1: 5 : +591
+	//  -2: -0.2: 4 : +709
+	// 	-3:  0	: 5 : +544
+	//	-3: -0.01:5 : +434
+	//	-3: -0.1: 6	: +620
+	//  -3: -0.15:3 : +427
+	//	-3:	-0.2: 7	: +433
+	//  -3: -0.25:6 : +391
+	//	-3:	-0.3: 6 : +590
+	//	-3: -0.4: 3 : +450
+	//-2.9: -0.01:4 : +410
+	//	-4: -0.01:6 : +474
+	//	-4: -0.05:5 : +306
+	//	-4: -0.1: 4 : +330
+	//	-4: -0.2: 5 : +407
+	//	-4: -0.3: 4 : +341
+	//  -5:-0.01: 6 : +443
+	//  -5: -0.1: 6 : +296
+	//	-5: -0.2: 4 : +348
 	private double mutation = 0.0005;
-	private double cross = 0.1;
+	private double cross = 0.40;
 	private double[] migrationRate;
-	private int migrationInterval = 1;
+	private int migrationInterval = 5;
 	private double[] new_FG; //new fitness gain
 	private double[] old_FG;
 	public int generation;
@@ -24,7 +54,7 @@ public class MPGA {
 	public Integer[][] eliteIndiv;
 	public double [] elites;
 	private double [] old_elites;
-	public int optimal = 200;	// Set the optimum here	
+	public int optimal = 600;	// Set the optimum here	
 	//private static Knapsack knap; //knapsack problem
 	private static MSA msa; //multi sequence alignment problem
 	private Integer[][][][] populationNew;
@@ -74,7 +104,7 @@ public class MPGA {
 			for (int j = 0; j < n/p; j++) {
 				Integer [][] temp = new Integer[w][l];
 				for (int k = 0; k < w; k++) {
-					int limit = msa.length(k);
+					/*int limit = msa.length(k);
 					//adding 1's first
 					for (int n = 0; n < limit; n++)
 						temp[k][n] = 1;
@@ -87,8 +117,12 @@ public class MPGA {
 						int t = temp[k][r];
 						temp[k][r] = temp[k][n];
 						temp[k][n] = t;
+					}*/
+					for (int n = 0; n < l; n++) {
+						temp[k][n] = 1;
 					}
 				}
+				repair(temp, null);
 				GA.get(i).add(temp);
 				fitness.get(i).add(getFitness(temp));
 			}
@@ -97,16 +131,24 @@ public class MPGA {
 	
 	//Using the sum of pairs for calculating
 	public static double getFitness(Integer [][] indiv){
-		int sumTotal = 0;
-		int[] sumsOfPairs = new int[l];
+		double sumTotal = 0;
+		double[] sumsOfPairs = new double[l];
 		int[] size = new int[w];
+		char[]	column = new char[indiv.length];
+		int matches = 0;
 		for (int n = 0; n < w; n++) {
 			size[n] = -1;
 		}
 		for (int c = 0; c < l; c++) {
+			boolean lastAllGaps = true;
 			for (int n = 0; n < w; n++) {
-				if (indiv[n][c] == 1)
+				if (indiv[n][c] == 1) {
 					size[n]++;
+					column[n] = msa.getChar(n, size[n]);
+				} else
+					column[n] = '-';
+				if (c > 0 && indiv[n][c-1] == 1)
+					lastAllGaps = false;
 			}
 			sumsOfPairs[c] = 0;
 			for (int s = 0; s < w - 1; s++) {
@@ -120,19 +162,19 @@ public class MPGA {
 						c2 = msa.getChar(t, size[t]);
 					else
 						c2 = '-';
-					int dist = 0;
+					double dist = 0;
 					if (c1 == '-' && c2 == '-')
 						dist = 0;
 					else if (c1 == '-') {
-						if (c > 0 && indiv[s][c-1] == 0)
-							dist = -1;
+						if (c > 0 && indiv[s][c-1] == 0 && !lastAllGaps)
+							dist = -0.2;
 						else
-							dist = -10;
+							dist = -3;
 					} else if (c2 == '-') {
-						if (c > 0 && indiv[t][c-1] == 0)
-							dist = -1;
+						if (c > 0 && indiv[t][c-1] == 0 && !lastAllGaps)
+							dist = -0.2;
 						else
-							dist = -10;
+							dist = -3;
 					} else if (c1 != '-' && c2 != '-')
 						try {
 							/*if (c1 == 'u' || c2 == 'u') {
@@ -148,12 +190,24 @@ public class MPGA {
 					sumsOfPairs[c] += dist; 
 				}
 			}
+
+			boolean match = true;
+			char e = column[0];
+			for (int i = 1; i < indiv.length; i++) {
+				if (column[i] != e)
+					match = false;
+			}
+			if (match && e != '-') {
+				matches++;
+				//multiplying score
+				sumsOfPairs[c] *= 2;
+			}
 		}
-		//summing up the column score
+		//summing up the column score		
 		for (int c = 0; c < l; c++)
 			sumTotal += sumsOfPairs[c];
 				
-		return sumTotal;	
+		return sumTotal;
 	}
 	
 	public void singleGARun(){
@@ -162,15 +216,16 @@ public class MPGA {
 		mutation();
 		setElite();
 		replacement();
-		if (generation % migrationInterval == 0) 
-			//migration_ring_fixed();
+		if (generation % migrationInterval == 0)
+			migration_ring_fixed();
 			//migration_ring_adaptive();
 			//migration_mix_fixed();
-			migration_mix_adaptive();
+			//migration_mix_adaptive();
+			//replacement();
 	}
 	public void runGA(){
 		for (int i = 0; i < Main.maxIter; i++) {
-			if(eliteF == optimal){
+			if(eliteF >= optimal){
 				Main.successRate++;
 				break;
 			}
@@ -247,16 +302,15 @@ public class MPGA {
 		//setting migration rates
 		for (int k = 0; k < p; k++) {
 			new_FG[k] = (elites[k] - old_elites[k]);
-			if (new_FG[k] > old_FG[k] && migrationRate[k] <= 0.7)
-				migrationRate[k] += 0.15;
-			else if (new_FG[k] < old_FG[k] && migrationRate[k] >= 0.3)
-				migrationRate[k] -= 0.15;
+			if (new_FG[k] > old_FG[k] && migrationRate[k] <= 0.95)
+				migrationRate[k] += 0.05;
+			else if (new_FG[k] < old_FG[k] && migrationRate[k] >= 0.1)
+				migrationRate[k] -= 0.05;
 			old_FG[k] = new_FG[k];
 		}
 		old_elites = elites;
 		
 		//now choosing the population with the top indiv to migrate from
-		double max = optimal / 10;
 		for (int i = 0; i < p; i++) {
 			int top = i;
 			double part[] = new double[p];
@@ -264,12 +318,17 @@ public class MPGA {
 			for (int k = 0; k < p; k++) {
 				if (k == top)
 					continue; //skipping sender
-				part[k] = (optimal - maxFit[k]) / max;
+				//part[k] = Math.abs(850 - maxFit[k]) / max;
+				//if (avgFit[top] > avgFit[k])
+					part[k] = (1 + ((avgFit[top] - avgFit[k]) / avgFit[k]));
+					if (part[k] < 0)
+						part[k] = 0;
 			}
 			for (int k = 0; k < p; k++) {
 				if (k == top)
 					continue; //skipping sender
 				size = (int) (GA.get(top).size() * migrationRate[top] * part[k]);
+				//size = (int) (GA.get(top).size() * part[k]);
 				if (size > GA.get(top).size())
 					size = GA.get(top).size();
 				for (int n = 0; n < size; n++) {
@@ -291,8 +350,6 @@ public class MPGA {
 				if (k == top)
 					continue; //skipping sender
 				size = (int) (GA.get(top).size() * .05);
-				if (size > GA.get(top).size())
-					size = GA.get(top).size();
 				for (int n = 0; n < size; n++) {
 					GA_New.get(k).add(populationNew[top][order[top][n]]);
 					fitness_New.get(k).add(fitnessNew[top][order[top][n]]);
@@ -304,32 +361,95 @@ public class MPGA {
 	
 	
 	public void mutation(){
+		int type = 0;
+		if (Math.random() >= 2.0/3.0 ) {
+			type = 1;
+		} else if (Math.random() >= 1.0/3.0 ) {
+			type = 2;
+		}
+		int max = 1;
 		for (int k = 0; k < p; k++) {
 			for (int i = 0; i < GA.get(k).size(); i++) {
 				Integer[][] indiv = GA.get(k).get(i);
-				for (int m = 0; m < 1; m++) {
+				int T = type;
+				for (int m = 0; m < max; m++) {
 					Integer[][] indivTemp = new Integer[w][l];
 					for (int a = 0; a < w; a++) {
 						indivTemp[a] = copy(indiv[a]);
 					}
 					for (int n = 0; n < w; n++) {
 						for (int j = 0; j < l; j++) {
-							//if (indiv[n][j] == 1)
+							//if (indiv[n][j] == 1 && type != 2)
 								//continue;
 							if(Math.random() < mutation) {
 								//populationGA[i][j] = populationGA[i][j]^1;
 								int r = (int)Math.floor(Math.random()*l);
 								int t;
 								// Swapping gap
-								indivTemp[n][j] = indivTemp[n][j]^1;
-								/*if (Math.random() >= 0.5 ) {
+								if (T == 1) {
 									t = indivTemp[n][r];
 									indivTemp[n][r] = indivTemp[n][j];
 									indivTemp[n][j] = t;
 									continue;
+								} else if (T == 2) {
+									indivTemp[n][j] = indivTemp[n][j]^1;
+									continue;
+								} else if (T == 3) {
+									//adding a gap
 								}
 								//else, shifting sequence
-								int stop = 0;
+								//if (indiv[n][j] == 1)
+								//	continue;
+								int start = j;
+								int stop = j;
+								//find 1st gap
+								while (start > 0) {
+									if (indiv[n][start-1] == 0)
+										start--;
+									else
+										break;
+								}
+								//find last gap
+								while (stop + 1 < l) {
+									if (indiv[n][stop+1] == 0)
+										stop++;
+									else
+										break;
+								}
+								//choose random new position
+								int size = stop - start + 1;
+								int rand = (int)Math.floor(Math.random()*(l));
+								int[] temp = new int[size];
+								for (int e = 0; e < size; e++) {
+									temp[e] = indivTemp[n][start+e];
+								}
+								//copy 
+								if (rand > start && rand <= stop && stop + rand - start < l) {
+									//shifting elements after gaps
+									for (int e = 0; e < rand - start; e++) {
+										indivTemp[n][start+e] = indivTemp[n][stop + 1 + e];
+									}
+									for (int e = 0; e < size; e++) {
+										indivTemp[n][rand + e] = temp[e];
+									}
+								} else if (rand > stop) {
+									//shifting elements after gaps
+									for (int e = 0; e < rand - stop; e++) {
+										indivTemp[n][start+e] = indivTemp[n][stop + 1 + e];
+									}
+									for (int e = 0; e < size; e++) {
+										indivTemp[n][rand - size + e] = temp[e];
+									}
+								} else if (rand < start) {
+									for (int e = 0; e < start - rand ; e++) {
+										indivTemp[n][stop - e] = indivTemp[n][start-1-e];
+									}
+									for (int e = 0; e < size; e++) {
+										indivTemp[n][rand + e] = temp[e];
+									}
+								}
+								
+								/*int stop = 0;
 								if (r > j) {
 									stop = r - j - 1; 
 									t = indivTemp[n][j];
@@ -348,40 +468,101 @@ public class MPGA {
 							}//mut
 						}//l
 					}//w
-					repair(indivTemp);
+					if (T == 2)
+						repair(indivTemp, null);
 					//if (getFitness(indivTemp) > fitness.get(k).get(i)) {
 						indiv = indivTemp;
 						GA.get(k).set(i, indiv);
-					//}
+					/*	break;
+					}  else {
+						//new type
+						if (Math.random() >= 0.5)
+							T = (T+1)%3;
+						else
+							T = (T+2)%3;
+					}*/
 				}//m times
-					
 			}
+			
 			for (int i = 0; i < GA_New.get(k).size(); i++) {
 				Integer[][] indiv = GA_New.get(k).get(i);
-				for (int m = 0; m < 1; m++) {
+				int T = type;
+				for (int m = 0; m < max; m++) {
 					Integer[][] indivTemp = new Integer[w][l];
 					for (int a = 0; a < w; a++) {
 						indivTemp[a] = copy(indiv[a]);
 					}
 					for (int n = 0; n < w; n++) {
 						for (int j = 0; j < l; j++) {
-							//if (indiv[n][j] == 1)
+							//if (indiv[n][j] == 1 && type != 2)
 								//continue;
 							if(Math.random() < mutation) {
 								//populationGA[i][j] = populationGA[i][j]^1;
-								//indiv[j] = indiv[j]^1;
 								int r = (int)Math.floor(Math.random()*l);
 								int t;
 								// Swapping gap
-								indivTemp[n][j] = indivTemp[n][j]^1;
-								/*if (Math.random() >= 0.5 ) {
-										t = indivTemp[n][r];
-										indivTemp[n][r] = indivTemp[n][j];
-										indivTemp[n][j] = t;
+								if (T == 1) {
+									t = indivTemp[n][r];
+									indivTemp[n][r] = indivTemp[n][j];
+									indivTemp[n][j] = t;
+									continue;
+								} else if (T == 2) {
+									indivTemp[n][j] = indivTemp[n][j]^1;
 									continue;
 								}
 								//else, shifting sequence
-								int stop = 0;
+								//if (indiv[n][j] == 1)
+								//	continue;
+								int start = j;
+								int stop = j;
+								//find 1st gap
+								while (start - 1 >= 0) {
+									if (indiv[n][start-1] == 0)
+										start--;
+									else
+										break;
+								}
+								//find last gap
+								while (stop + 1 < l) {
+									if (indiv[n][stop+1] == 0)
+										stop++;
+									else
+										break;
+								}
+								//choose random new position
+								int size = stop - start + 1;
+								int rand = (int)Math.floor(Math.random()*(l));
+								int[] temp = new int[size];
+								for (int e = 0; e < size; e++) {
+									temp[e] = indivTemp[n][start+e];
+								}
+								//copy 
+								if (rand > start && rand <= stop && stop + rand - start < l) {
+									//shifting elements after gaps
+									for (int e = 0; e < rand - start; e++) {
+										indivTemp[n][start+e] = indivTemp[n][stop + 1 + e];
+									}
+									for (int e = 0; e < size; e++) {
+										indivTemp[n][rand + e] = temp[e];
+									}
+								} else if (rand > stop) {
+									//shifting elements after gaps
+									for (int e = 0; e < rand - stop; e++) {
+										indivTemp[n][start+e] = indivTemp[n][stop + 1 + e];
+									}
+									for (int e = 0; e < size; e++) {
+										indivTemp[n][rand - size + e] = temp[e];
+									}
+								} else if (rand < start) {
+									for (int e = 0; e < start - rand ; e++) {
+										indivTemp[n][stop - e] = indivTemp[n][start-1-e];
+									}
+									for (int e = 0; e < size; e++) {
+										indivTemp[n][rand + e] = temp[e];
+									}
+								}
+								//else, shifting sequence
+								/*int stop = 0;
 								if (r > j) {
 									stop = r - j - 1; 
 									t = indivTemp[n][j];
@@ -397,22 +578,36 @@ public class MPGA {
 									}
 									indivTemp[n][r] = t;
 								}*/
-							}
-						}
-					}
-					repair(indivTemp);
+							}//mut
+						}//l
+					}//w
+					if (T == 2)
+						repair(indivTemp, null);
 					//if (getFitness(indivTemp) > fitness_New.get(k).get(i)) {
 						indiv = indivTemp;
 						GA_New.get(k).set(i, indiv);
-					//}
+					/*	break;
+					} else {
+						//new type
+						if (Math.random() >= 0.5)
+							T = (T+1)%3;
+						else
+							T = (T+2)%3;
+					}*/
 				}//m times
-			}
+			}//indiv
 		}//pop
 	}
 
 	public void crossover(){
 		Integer [][] child1;
 		Integer [][] child2;
+		int type = 0;
+		/*if (Math.random() >= 2.0/3.0 ) {
+			type = 1;
+		} else if (Math.random() >= 1.0/3.0 ) {
+			type = 2;
+		}*/
 		for (int k = 0; k < p; k++) {
 			int size = GA.get(k).size();
 			for (int i = 0; i < size; i++) {
@@ -421,9 +616,10 @@ public class MPGA {
 					int randIndex = (int)Math.floor(Math.random()*size);
 					Integer [][] mate = GA.get(k).get(randIndex);
 					Integer [][] indiv = GA.get(k).get(i);
-					Integer[] order = new Integer[(int)(size*.3)];
-					Double[] fit = new Double[(int)(size*0.3)];
-					Integer[][][] genePool = new Integer[(int)(size*0.3)][w][l];
+					double ratio = 0.30;
+					Integer[] order = new Integer[(int)(size*ratio)];
+					Double[] fit = new Double[(int)(size*ratio)];
+					Integer[][][] genePool = new Integer[(int)(size*ratio)][w][l];
 					int count = 0;
 					while (count < genePool.length) {
 						randIndex = (int)Math.floor(Math.random()*size);
@@ -437,42 +633,12 @@ public class MPGA {
 					Integer [][] mate1;//, mate2;
 					mate1 = genePool[order[0]];
 					//mate2 = genePool[order[1]];
-					/*int found = 0;
-					for (int j = 0; j < genePool.length; j++)
-						if(Math.random() < cross){
-							if (found == 0) {
-								mate1 = genePool[order[j]];
-								found++;
-							} else if (found == 1) {
-								mate2 = genePool[order[j]];
-								found++;
-							} else
-								break;
-						}*/
-					//if (Math.random() < 0.5)
-						mate = mate1;
-					//else
-						//mate = mate2;
+					mate = mate1;
 
 					child1 = new Integer[w][l];
 					child2 = new Integer[w][l];
-						// Perform random row crossover to generate offsprings
-					int crossPoint = (int)Math.floor(Math.random()*(l));
-					for (int n = 0; n < w; n++) {
-						for (int j = 0; j < crossPoint; j++) {
-							child1[n][j] = indiv[n][j];
-							child2[n][j] = mate[n][j];
-						}
-						for (int j = crossPoint; j < l; j++) {
-							child1[n][j] = mate[n][j];
-							child2[n][j] = indiv[n][j];
-						}
-					}
-					repair(child1);
-					repair(child2);
-					
-					/*if (Math.random() >= 0.5 ) {
-						// Perform random row crossover to generate offsprings
+					// Perform random row crossover to generate offsprings
+					if (type == 1) {
 						int crossPoint = (int)Math.floor(Math.random()*(w));
 						for (int j = 0; j <= crossPoint; j++) {
 							child1[j] = copy(indiv[j]);
@@ -482,6 +648,22 @@ public class MPGA {
 							child1[j] = copy(mate[j]);
 							child2[j] = copy(indiv[j]);
 						}
+					} else if (type == 2) {
+						int[] cp = new int[w];
+						for (int n = 0; n < w; n++) {
+							int crossPoint = (int)Math.floor(Math.random()*(l));
+							cp[n] = crossPoint;
+							for (int j = 0; j < crossPoint; j++) {
+								child1[n][j] = indiv[n][j];
+								child2[n][j] = mate[n][j];
+							}
+							for (int j = crossPoint; j < l; j++) {
+								child1[n][j] = mate[n][j];
+								child2[n][j] = indiv[n][j];
+							}
+						}
+						repair(child1, cp);
+						repair(child2, cp);
 					} else {
 						//else do random column crossover
 						int[] crossPoints = new int[w];
@@ -554,7 +736,7 @@ public class MPGA {
 								}							
 							}
 						}
-					}*/
+					}
 					
 					double val1 = getFitness(child1);
 					double val2 = getFitness(child2);
@@ -773,7 +955,7 @@ public class MPGA {
 		return toReturn;
 	}
 	
-	private void repair(Integer[][] arg1) {
+	private void repair(Integer[][] arg1, int[] arg2) {
 
 		int[] count = new int[w];
 		for (int n = 0; n < w; n++) {
@@ -789,7 +971,8 @@ public class MPGA {
 			if (count[n] < msa.length(n)) {
 				//need to add ones
 				while (count[n] < msa.length(n)){
-					for (int j = 0; j < l; j++) {
+					int start = (arg2==null)? 0: arg2[n];
+					for (int j = start; j < l; j++) {
 						if (Math.random() < 1.0 / l) {
 							if (arg1[n][j] == 0) {
 								arg1[n][j] = 1;
@@ -803,7 +986,8 @@ public class MPGA {
 			} else if (count[n] > msa.length(n)) {
 				//need to remove ones
 				while (count[n] > msa.length(n)){
-					for (int j = 0; j < l; j++) {
+					int start = (arg2==null)? 0: arg2[n];
+					for (int j = start; j < l; j++) {
 						if (Math.random() < 1.0 / l) {
 							if (arg1[n][j] == 1) {
 								arg1[n][j] = 0;
