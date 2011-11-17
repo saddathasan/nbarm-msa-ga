@@ -15,7 +15,7 @@ public class MSA_Test {
 		printElite(mpga, msa);
 		System.out.println("Running Adaptive MPGA....");
 		double lastBest = mpga.eliteF;
-		for (int k = 1; k < 501; k++) {
+		for (int k = 1; k < 1001; k++) {
 			mpga.singleGARun();
 			//if (k%10 != 0 && k > 11) continue;
 			/*System.out.println("Best Individuals in run " + k);
@@ -50,7 +50,35 @@ public class MSA_Test {
 			}
 			System.out.println();
 		}
-		System.out.println("Score = " + mpga.eliteF);
+		int[] size = new int[indiv.length];
+		char[]	column = new char[indiv.length];
+		int matches = 0;
+		for (int i = 0; i < indiv.length; i++){
+			size[i] = -1;
+		}
+		for (int c = 0; c < indiv[0].length; c++) {
+			for (int l = 0; l < indiv.length; l++) {
+				if (indiv[l][c] == 1) {
+					size[l]++;
+					column[l] = msa.getChar(l, size[l]);
+				} else
+					column[l] = '-';
+			}
+			//check column
+			boolean match = true;
+			char e = column[0];
+			for (int i = 1; i < indiv.length; i++) {
+				if (column[i] != e)
+					match = false;
+			}
+			if (match && e != '-') {
+				System.out.print("*");
+				matches++;
+			} else
+				System.out.print(" ");
+		}
+		System.out.println();
+		System.out.println("Score = " + mpga.eliteF + ", with " + matches + " columns matching.");
 	}
 }
 
